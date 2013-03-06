@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>three.js - tweenmaxjs - bezier</title>
+		<link rel="image_src" type="image/jpeg" href="http://www.esedeerre.com/ejemplos/threejs/experimentos/bezier/threejs-bezier-cards.jpg" />
+		<script type="text/JavaScript">
+        //<![CDATA[
+        var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www."); document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+        //]]> 
+        </script>
+        <script type="text/javascript">
+        //<!--[CDATA[ 
+        var pageTracker = _gat._getTracker("UA-3219631-1"); pageTracker._initData(); pageTracker._trackPageview();
+        //]]--> 
+        </script>
+		<script type="text/javascript">
+          window.___gcfg = {lang: 'es'};
+          (function() {
+            var po = document.createElement('script'); po.type = 'text/javascript'; po.async = true;
+            po.src = 'https://apis.google.com/js/plusone.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(po, s);
+          })();
+        </script>
+		<meta charset="utf-8">
+		<style>
+			body {
+				color: #333333;
+				font-family:sans-serif;
+				font-size:11px;
+				background-color: #000000;
+				margin: 0px;
+				overflow: hidden;
+			}
+			.fb-like{
+				position: absolute;
+				top: 10px;
+				left: 5px;
+				color: white;
+			}
+
+		</style>
+	</head>
+	<body>
+		<div id="fb-root"></div>
+		<script src="js/three.min.js"></script>
+		<script src="js/TweenMax.min.js"></script>
+		<script>(function(d, s, id) {
+			  var js, fjs = d.getElementsByTagName(s)[0];
+			  if (d.getElementById(id)) return;
+			  js = d.createElement(s); js.id = id;
+			  js.src = "//connect.facebook.net/en_GB/all.js#xfbml=1&appId=355747928418";
+			  fjs.parentNode.insertBefore(js, fjs);
+			}(document, 'script', 'facebook-jssdk'));
+		</script>
+		
+			<div class="fb-like" data-href="http://www.esedeerre.com/ejemplos/threejs/experimentos/bezier/index.html" data-send="false" data-width="180" data-show-faces="true" data-colorscheme="dark"></div>
+		<script>
+
+			/*
+			Prueba de Bezier en TweenMax con ThreejS. El código es muy mejorable / optimizable, está hecho para probar rápido :)
+			*/
+
+			var camera, scene, renderer;
+			var images = ["img/1c.png","img/11s.png","img/12s.png","img/13c.png"];
+			var planos = [];
+			var mouse = { x: 0, y: 0 };
+			var textura_back
+
+			init();
+			animate();
+
+			function init() {
+				renderer = new THREE.WebGLRenderer({
+					antialias :true
+				});
+
+				textura_back = THREE.ImageUtils.loadTexture( 'img/back.png' );
+
+				renderer.setSize( window.innerWidth, window.innerHeight );
+				document.body.appendChild( renderer.domElement );
+
+				camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 1, 1000 );
+				camera.position.z = 1000;
+				camera.far = 10000;
+				camera.updateProjectionMatrix();
+
+				scene = new THREE.Scene();
+
+				scene.fog = new THREE.FogExp2(0x333333,.0005);
+
+				//var geometry;
+				var texture;
+				var material;
+
+				var geometry = new THREE.PlaneGeometry( 215, 315 );
+				geometry.doubleSided = true;
+
+				var texture = THREE.ImageUtils.loadTexture( images[0] );
+
+				var material = new THREE.MeshBasicMaterial( {
+					map:texture,
+					transparent:true,
+					side:THREE.DoubleSide
+				} );
+
+				var mesh = new THREE.Mesh( geometry, material );
+				scene.add( mesh );
+				planos.push(mesh);
+
+				document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+
+				createAndMove();
+
+				window.addEventListener( 'resize', onWindowResize, false );
+
+			}
+
+			function createAndMove(){
+				var t = .7;
+				var geometry;
+				var texture;
+				var mesh;
+				var material_back
+				for(var i = 0; i < 5; i++){
+					var geometry = new THREE.PlaneGeometry( 215, 315 );
+					geometry.doubleSided = true;
+
+					texture = THREE.ImageUtils.loadTexture( images[parseInt(images.length * Math.random())] );
+
+					material = new THREE.MeshBasicMaterial( {
+						map:texture,
+						transparent:true,
+						side:THREE.DoubleSide
+					} );
+
+					material_back = new THREE.MeshBasicMaterial( {
+						map:textura_back,
+						transparent:true,
+						side:THREE.DoubleSide
+					} )
+					var obj = new THREE.Object3D();
+
+					var mesh = new THREE.Mesh( geometry, material );
+					mesh.position.z = 1;
+					mesh.doubleSided = true;
+
+					var mesh_back = new THREE.Mesh( geometry, material_back );
+					mesh_back.position.z = 0;
+					mesh.doubleSided = true;
+
+					obj.position.z = camera.position.z-1210;
+					obj.rotation.x = -Math.PI;
+					obj.add( mesh );
+					obj.add( mesh_back );
+
+					scene.add(obj);
+
+					TweenMax.to(obj.position,t,{
+					bezier:[{
+						x:0,
+						y:300,
+						z:camera.position.z-1230
+					},{
+						x:-(500)+i*250,
+						y:0,
+						z:camera.position.z-700
+					}],
+					delay:i*.2,
+					ease:Quad.easeInOut
+					});
+					TweenMax.to(obj.rotation,t,{
+						bezier:[{
+							x:-Math.PI
+						},{
+							x:0
+						}],
+						delay:i*.2,
+						ease:Quad.easeInOut
+					});
+				}
+				
+				TweenMax.to(camera.position,1,
+					{
+						z:camera.position.z + 250,
+						onComplete:createAndMove,
+						ease:Linear.easeNone
+					}
+				)
+
+			}
+
+			function onDocumentMouseMove( event ) {
+
+				event.preventDefault();
+
+				mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+				mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+
+			}
+
+			function onWindowResize() {
+
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+
+
+
+				renderer.setSize( window.innerWidth, window.innerHeight );
+			}
+
+			function animate() {
+				requestAnimationFrame( animate );
+				renderer.render( scene, camera );
+				//camera.position.z += 5;
+				camera.position.x -= (camera.position.x - (mouse.x * window.innerWidth) / 5) / 10;
+				camera.position.y -= (camera.position.y - (mouse.y * window.innerHeight) / 2) / 10;
+				camera.lookAt(new THREE.Vector3(0,0,0));
+
+				console.log();
+			}
+		</script>
+
+	</body>
+</html>
